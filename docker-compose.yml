@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: dispatchpro-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: dispatchpro
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - dispatchpro-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dispatchpro-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: 8080
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DATABASE: dispatchpro
+      JWT_SECRET: dispatchpro_jwt_secret_key_2024_secure
+      JWT_EXPIRY_HOURS: 24
+      CSRF_SECRET: dispatchpro_csrf_secret_key_2024
+      RATE_LIMIT_REQUESTS: 100
+      RATE_LIMIT_WINDOW_MINUTES: 1
+    depends_on:
+      - mongo
+    networks:
+      - dispatchpro-network
+
+volumes:
+  mongo_data:
+
+networks:
+  dispatchpro-network:
+    driver: bridge
